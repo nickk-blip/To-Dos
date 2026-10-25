@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0b1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>My To-Dos</title>
+<style>
+:root{
+  --bg:#f3f2ff; --text:#17163a; --muted:#6d6b90; --card:rgba(255,255,255,.72); --solid:#ffffff; --line:rgba(23,22,58,.09);
+  --blob1:rgba(124,58,237,.28); --blob2:rgba(236,72,153,.22); --blob3:rgba(6,182,212,.2);
+  --shadow:0 12px 30px -14px rgba(60,40,140,.35);
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#0b0b1a; --text:#f4f4ff; --muted:#a3a6c7; --card:rgba(255,255,255,.06); --solid:#171729; --line:rgba(255,255,255,.1);
+  --blob1:rgba(124,58,237,.38); --blob2:rgba(236,72,153,.26); --blob3:rgba(6,182,212,.22);
+  --shadow:0 12px 30px -14px rgba(0,0,0,.7);
+}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;
+  font:16px/1.45 ui-rounded,"SF Pro Rounded",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.blobs{position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:
+    radial-gradient(42vmax 42vmax at 5% 0%,var(--blob1),transparent 62%),
+    radial-gradient(36vmax 36vmax at 100% 35%,var(--blob2),transparent 62%),
+    radial-gradient(42vmax 42vmax at 25% 105%,var(--blob3),transparent 62%)}
+.wrap{max-width:640px;margin:0 auto;padding:calc(14px + env(safe-area-inset-top)) 16px 130px}
+
+/* HERO */
+.hero{position:relative;overflow:hidden;border-radius:30px;padding:22px 20px;color:#fff;display:flex;align-items:center;gap:14px;
+  background:linear-gradient(135deg,#5b21b6 0%,#c026d3 52%,#f97316 100%);
+  box-shadow:0 24px 44px -20px rgba(192,38,211,.75)}
+.hero::before,.hero::after{content:"";position:absolute;border-radius:50%;background:rgba(255,255,255,.13)}
+.hero::after{width:230px;height:230px;right:-80px;top:-100px}
+.hero::before{width:120px;height:120px;left:-40px;bottom:-60px}
+.hero .txt{flex:1;position:relative;z-index:1;min-width:0}
+.hello{font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.85;font-weight:700}
+.hero h1{margin:6px 0 2px;font-size:25px;line-height:1.15;font-weight:800}
+.date{opacity:.85;font-size:14px}
+.stats{display:flex;gap:6px;margin-top:14px;flex-wrap:wrap}
+.stat{background:rgba(255,255,255,.2);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border-radius:999px;padding:4px 11px;font-size:12px;font-weight:700}
+.ring{position:relative;z-index:1;width:92px;height:92px;flex:0 0 auto}
+.ring svg{transform:rotate(-90deg);display:block}
+.ring circle{fill:none;stroke-width:9}
+.ring .trk{stroke:rgba(255,255,255,.25)}
+.ring .val{stroke:#fff;stroke-linecap:round;transition:stroke-dashoffset .8s cubic-bezier(.2,.9,.3,1)}
+.ring .pct{position:absolute;inset:0;display:grid;place-items:center;font-weight:800;font-size:21px}
+
+/* SECTIONS */
+.sec{display:flex;align-items:center;justify-content:space-between;margin:26px 2px 12px;gap:8px}
+.sec h2{margin:0;font-size:19px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mini-btns{display:flex;gap:4px}
+.ghost{border:1px solid var(--line);background:var(--card);color:var(--muted);font:inherit;font-size:12px;font-weight:700;
+  border-radius:999px;padding:6px 11px;cursor:pointer}
+
+/* CATEGORY CARDS */
+.cats{display:flex;gap:12px;overflow-x:auto;overflow-y:visible;margin:-10px -16px -14px;padding:12px 16px 30px;
+  scroll-snap-type:x mandatory;scroll-padding-inline:16px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.cats::after{content:"";flex:0 0 4px}
+.cats::-webkit-scrollbar{display:none}
+.cat{flex:0 0 auto;width:122px;height:128px;border-radius:24px;padding:13px;border:none;color:#fff;text-align:left;cursor:pointer;
+  scroll-snap-align:start;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;font:inherit;
+  background:linear-gradient(150deg,var(--c1),var(--c2));box-shadow:0 14px 24px -14px var(--c1);
+  transition:transform .25s cubic-bezier(.2,.9,.3,1.3),box-shadow .25s}
+.cat::after{content:"";position:absolute;width:84px;height:84px;border-radius:50%;background:rgba(255,255,255,.16);right:-26px;bottom:-30px}
+.cat:active{transform:scale(.96)}
+.cat::before{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 0 0 1px rgba(255,255,255,.18);pointer-events:none;transition:box-shadow .25s}
+.cat.on::before{box-shadow:inset 0 0 0 2.5px rgba(255,255,255,.95),inset 0 0 0 5px rgba(255,255,255,.18)}
+.cat.on{box-shadow:0 16px 26px -12px var(--c1)}
+.cat.on .nm::after{content:" ✓";font-size:12px;opacity:.9}
+.cat .emo{font-size:30px;line-height:1;position:relative;z-index:1}
+.cat .nm{font-weight:800;font-size:14px;line-height:1.2;position:relative;z-index:1;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.cat .ct{font-size:11.5px;opacity:.9;font-weight:600;position:relative;z-index:1}
+.cat .bar{height:4px;background:rgba(255,255,255,.3);border-radius:2px;margin-top:5px;overflow:hidden}
+.cat .bar i{display:block;height:100%;background:#fff;border-radius:2px;transition:width .6s}
+.cat.add{background:var(--card);color:var(--muted);border:2px dashed var(--line);box-shadow:none;align-items:center;justify-content:center;text-align:center;gap:6px;font-weight:700;font-size:13px}
+.cat.add::after{display:none}
+.cat.add .emo{font-size:30px;color:var(--muted)}
+
+/* FILTER */
+.seg{display:flex;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:4px;margin-bottom:14px;
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.seg button{flex:1;border:none;background:none;color:var(--muted);font:inherit;font-size:13.5px;font-weight:700;padding:9px 6px;border-radius:12px;cursor:pointer;transition:.2s}
+.seg button.on{background:var(--solid);color:var(--text);box-shadow:var(--shadow)}
+
+/* TASKS */
+ul{list-style:none;margin:0;padding:0}
+li{display:flex;gap:12px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:20px;
+  padding:15px 12px 15px 18px;margin-bottom:10px;position:relative;overflow:hidden;box-shadow:var(--shadow);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);animation:in .4s cubic-bezier(.2,.9,.3,1) both}
+li::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:linear-gradient(var(--c1),var(--c2))}
+@keyframes in{from{opacity:0;transform:translateY(10px) scale(.98)}}
+.chk{flex:0 0 auto;width:27px;height:27px;border-radius:50%;border:2.5px solid var(--c1);background:transparent;display:grid;place-items:center;
+  cursor:pointer;padding:0;color:#fff;font-size:15px;font-weight:900;transition:transform .15s;margin-top:-1px}
+.chk:active{transform:scale(.8)}
+li.done .chk{background:linear-gradient(135deg,var(--c1),var(--c2));border-color:transparent;animation:pop .35s}
+li.done .chk::after{content:"✓"}
+@keyframes pop{50%{transform:scale(1.25)}}
+li.done{opacity:.62}
+li.done .title{text-decoration:line-through;text-decoration-color:var(--c1);text-decoration-thickness:2px}
+.body{flex:1;min-width:0}
+.title{font-weight:650;font-weight:600;word-wrap:break-word;cursor:text}
+.meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px;font-size:11.5px}
+.tag{padding:3px 9px;border-radius:999px;font-weight:700;background:var(--line);color:var(--muted)}
+.tag.ct{color:#fff;background:linear-gradient(90deg,var(--c1),var(--c2))}
+.tag.high{background:rgba(244,63,94,.16);color:#f43f5e}
+.tag.med{background:rgba(245,158,11,.16);color:#f59e0b}
+.tag.low{background:rgba(16,185,129,.16);color:#10b981}
+.tag.over{background:#f43f5e;color:#fff}
+.tag.today{background:rgba(168,85,247,.18);color:#a855f7}
+.tag.daily{background:rgba(14,165,233,.16);color:#0ea5e9}
+.tag.streak{background:linear-gradient(90deg,#f97316,#ef4444);color:#fff}
+.rep{border:none;background:none;font-size:17px;line-height:1;cursor:pointer;padding:0 2px;opacity:.3;filter:grayscale(1);transition:.2s}
+.rep.on{opacity:1;filter:none}
+.del{border:none;background:none;color:var(--muted);font-size:22px;line-height:1;cursor:pointer;padding:0 2px;opacity:.55}
+.empty{text-align:center;padding:44px 20px;color:var(--muted)}
+.empty .big{font-size:52px;margin-bottom:8px;animation:float 3s ease-in-out infinite}
+.empty b{display:block;color:var(--text);font-size:17px;margin-bottom:2px}
+@keyframes float{50%{transform:translateY(-8px)}}
+
+/* TOP BAR + MENU */
+.top{position:relative;display:flex;align-items:center;justify-content:space-between;margin:2px 2px 14px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:17px;letter-spacing:-.01em}
+.brand i{width:32px;height:32px;border-radius:11px;display:grid;place-items:center;font-style:normal;color:#fff;font-size:16px;
+  background:linear-gradient(135deg,#7c3aed,#ec4899);box-shadow:0 8px 16px -8px rgba(236,72,153,.8)}
+.more{width:42px;height:42px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--text);font-size:20px;line-height:1;
+  cursor:pointer;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);display:grid;place-items:center}
+.menu{position:absolute;right:0;top:52px;z-index:15;min-width:220px;background:var(--solid);border:1px solid var(--line);border-radius:20px;padding:6px;
+  box-shadow:0 24px 50px -16px rgba(0,0,0,.45);opacity:0;transform:translateY(-6px) scale(.97);transform-origin:top right;pointer-events:none;transition:.2s}
+.menu.open{opacity:1;transform:none;pointer-events:auto}
+.menu button{display:flex;align-items:center;gap:12px;width:100%;border:none;background:none;color:var(--text);font:inherit;font-size:15px;font-weight:600;
+  padding:12px 14px;border-radius:14px;text-align:left;cursor:pointer}
+.menu button:active,.menu button:hover{background:var(--line)}
+.menu hr{border:none;height:1px;background:var(--line);margin:4px 8px}
+
+/* FAB */
+.fab{position:fixed;right:20px;bottom:calc(22px + env(safe-area-inset-bottom));width:64px;height:64px;border-radius:22px;border:none;color:#fff;
+  font-size:34px;line-height:1;background:linear-gradient(135deg,#7c3aed,#ec4899);box-shadow:0 16px 32px -10px rgba(236,72,153,.8);
+  cursor:pointer;z-index:10;transition:transform .25s cubic-bezier(.2,.9,.3,1.4)}
+.fab:active{transform:scale(.9) rotate(90deg)}
+
+/* SHEET */
+.sheet-bg{position:fixed;inset:0;background:rgba(5,5,20,.5);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity .25s;z-index:20}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:21;background:var(--solid);border-radius:30px 30px 0 0;max-width:640px;margin:0 auto;
+  padding:10px 18px calc(20px + env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .35s cubic-bezier(.2,.9,.3,1.05);
+  box-shadow:0 -10px 40px rgba(0,0,0,.3);max-height:90vh;overflow-y:auto}
+.open .sheet-bg{opacity:1;pointer-events:auto}
+.open .sheet{transform:none}
+.grab{width:42px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 16px}
+.sheet h3{margin:0 0 14px;font-size:21px;font-weight:800}
+.field{width:100%;font:inherit;font-size:17px;color:var(--text);background:var(--bg);border:2px solid var(--line);border-radius:16px;padding:13px 15px;outline:none;transition:border-color .2s}
+.field:focus{border-color:#a855f7}
+input[type=date].field{font-size:15px;min-height:50px}
+.lbl{font-size:11.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:18px 0 9px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1.5px solid var(--line);background:none;color:var(--text);font:inherit;font-size:14px;font-weight:700;padding:8px 13px;border-radius:999px;cursor:pointer;transition:.15s}
+.chip.on{color:#fff;border-color:transparent;background:linear-gradient(135deg,var(--c1),var(--c2));box-shadow:0 8px 16px -8px var(--c1)}
+.add-btn{width:100%;margin-top:22px;border:none;border-radius:18px;padding:16px;font:inherit;font-size:17px;font-weight:800;color:#fff;cursor:pointer;
+  background:linear-gradient(135deg,#7c3aed,#ec4899);box-shadow:0 14px 26px -12px rgba(236,72,153,.8)}
+.add-btn:active{transform:scale(.98)}
+
+/* TOAST + CONFETTI */
+.toast{position:fixed;left:50%;top:calc(16px + env(safe-area-inset-top));transform:translate(-50%,-150%);z-index:60;
+  background:var(--solid);color:var(--text);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:999px;padding:10px 18px;
+  font-weight:700;font-size:14px;transition:transform .35s cubic-bezier(.2,.9,.3,1.3);white-space:nowrap}
+.toast.show{transform:translate(-50%,0)}
+.cf{position:fixed;width:8px;height:10px;border-radius:2px;pointer-events:none;z-index:50}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="blobs"></div>
+<div class="wrap">
+  <div class="top">
+    <div class="brand"><i>✓</i>My To-Dos</div>
+    <button class="more" id="moreBtn" aria-label="More options">⋯</button>
+    <div class="menu" id="menu">
+      <button id="clearDone">🧹 Clear completed</button>
+      <hr>
+      <button id="exportBtn">⬇️ Export backup</button>
+      <button id="importBtn">⬆️ Import backup</button>
+      <input type="file" id="importFile" accept=".json,application/json" hidden>
+    </div>
+  </div>
+  <section class="hero">
+    <div class="txt">
+      <div class="hello" id="hello"></div>
+      <h1 id="headline"></h1>
+      <div class="date" id="date"></div>
+      <div class="stats" id="stats"></div>
+    </div>
+    <div class="ring">
+      <svg width="92" height="92" viewBox="0 0 92 92">
+        <circle class="trk" cx="46" cy="46" r="38"/>
+        <circle class="val" id="ringVal" cx="46" cy="46" r="38" stroke-dasharray="238.76" stroke-dashoffset="238.76"/>
+      </svg>
+      <div class="pct" id="pct">0%</div>
+    </div>
+  </section>
+
+  <div class="sec"><h2>Categories</h2></div>
+  <div class="cats" id="cats"></div>
+
+  <div class="sec">
+    <h2 id="listTitle"></h2>
+    <div class="mini-btns" id="catTools"></div>
+  </div>
+  <div class="seg" id="seg">
+    <button data-f="active" class="on">To do</button>
+    <button data-f="done">Done</button>
+    <button data-f="all">All</button>
+  </div>
+  <ul id="list"></ul>
+</div>
+
+<button class="fab" id="fab" aria-label="Add task">+</button>
+
+<div id="sheetWrap">
+  <div class="sheet-bg" id="sheetBg"></div>
+  <form class="sheet" id="sheet" autocomplete="off">
+    <div class="grab"></div>
+    <h3>New task ✨</h3>
+    <input class="field" id="newTask" type="text" placeholder="What needs to be done?">
+    <div class="lbl">Category</div>
+    <div class="chips" id="catChips"></div>
+    <div class="lbl">Priority</div>
+    <div class="chips" id="priChips"></div>
+    <div class="lbl">Repeat</div>
+    <div class="chips" id="repChips"></div>
+    <div id="dueWrap">
+      <div class="lbl">Due date</div>
+      <input class="field" id="newDue" type="date">
+    </div>
+    <button class="add-btn" type="submit">Add task</button>
+  </form>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const KEY = "my-todo-app-v1";
+const PAL = [["#7c3aed","#ec4899"],["#06b6d4","#3b82f6"],["#f59e0b","#ef4444"],["#10b981","#06b6d4"],
+             ["#f43f5e","#a855f7"],["#84cc16","#10b981"],["#6366f1","#22d3ee"],["#fb923c","#f472b6"]];
+const EMO = {"Self Study":"📚","Apparel":"👕","Website":"🌐","Software":"💻"};
+const PRI = {"":["None","#64748b","#94a3b8"],high:["🔥 High","#f43f5e","#fb7185"],med:["⚡ Medium","#f59e0b","#fbbf24"],low:["🌿 Low","#10b981","#34d399"]};
+const EMOJI_RE = /^(\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*)\s*/u;
+
+function normalize(s){
+  if(!s || !Array.isArray(s.categories)) s = {categories:["Self Study","Apparel","Website","Software"], tasks:[]};
+  s.categories = s.categories.map((c,i)=> typeof c==="string" ? {name:c, emoji:EMO[c]||"✨", pal:i%PAL.length} : c);
+  if(!Array.isArray(s.tasks)) s.tasks = [];
+  return s;
+}
+function load(){ try{ return normalize(JSON.parse(localStorage.getItem(KEY))); }catch(e){ return normalize(null); } }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
+
+let state = load(), current = "__all", filter = "active", selCat = null, selPri = "", selRep = "";
+const isVirtual = () => current.startsWith("__");
+const inView = t => current==="__all" || (current==="__daily" ? t.repeat==="daily" : t.cat===current);
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const localISO = d => { d = new Date(d); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,10); };
+const today = () => localISO(new Date());
+const tomorrow = () => localISO(Date.now()+864e5);
+const catOf = n => state.categories.find(c=>c.name===n) || {name:n, emoji:"✨", pal:0};
+const vars = c => `--c1:${PAL[c.pal%PAL.length][0]};--c2:${PAL[c.pal%PAL.length][1]}`;
+const parseName = raw => { const m = raw.match(EMOJI_RE); return m ? {emoji:m[1], name:raw.slice(m[0].length).trim()} : {emoji:"✨", name:raw.trim()}; };
+const fmtDue = d => d===today() ? "Today" : d===tomorrow() ? "Tomorrow" :
+  new Date(d+"T00:00").toLocaleDateString(undefined,{day:"numeric",month:"short"});
+const yesterday = () => localISO(Date.now()-864e5);
+
+// ---- daily recurring tasks ----
+function refreshDaily(){
+  const t0 = today(); let changed = false;
+  state.tasks.forEach(t=>{ if(t.repeat==="daily" && t.done && t.lastDone!==t0){ t.done = false; changed = true; } });
+  if(changed) save();
+  return changed;
+}
+function markDaily(t, done){
+  const t0 = today();
+  if(done && t.lastDone!==t0){
+    t.prevStreak = t.streak||0; t.prevLast = t.lastDone||"";
+    t.streak = (t.lastDone===yesterday() ? (t.streak||0) : 0) + 1;
+    t.lastDone = t0;
+  } else if(!done && t.lastDone===t0){
+    t.streak = t.prevStreak||0; t.lastDone = t.prevLast||"";
+  }
+}
+const streakOf = t => (t.lastDone===today() || t.lastDone===yesterday()) ? (t.streak||0) : 0;
+let lastDay = null;
+function checkNewDay(){
+  const d = today();
+  if(lastDay && d!==lastDay){ refreshDaily(); render(); toast("🌅 New day — daily tasks reset"); }
+  lastDay = d;
+}
+
+function toast(msg){
+  const t = $("toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove("show"), 1800);
+}
+function confetti(x, y, colors){
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  for(let i=0;i<22;i++){
+    const p = document.createElement("span"); p.className = "cf";
+    p.style.left = x+"px"; p.style.top = y+"px";
+    p.style.background = colors[i%colors.length];
+    document.body.appendChild(p);
+    const a = Math.random()*Math.PI*2, d = 40+Math.random()*70;
+    p.animate([{transform:"translate(-50%,-50%) rotate(0)",opacity:1},
+               {transform:`translate(${Math.cos(a)*d}px,${Math.sin(a)*d+40}px) rotate(${Math.random()*540}deg)`,opacity:0}],
+              {duration:700+Math.random()*400, easing:"cubic-bezier(.2,.8,.3,1)"}).onfinish = ()=>p.remove();
+  }
+}
+
+function render(){
+  const t0 = today(), h = new Date().getHours();
+  const total = state.tasks.length, done = state.tasks.filter(t=>t.done).length, left = total-done;
+  const over = state.tasks.filter(t=>!t.done && t.due && t.due<t0).length;
+  const dueToday = state.tasks.filter(t=>!t.done && t.due===t0).length;
+  const pct = total ? Math.round(done/total*100) : 0;
+
+  $("hello").textContent = h<12 ? "☀️ Good morning" : h<17 ? "🌤️ Good afternoon" : "🌙 Good evening";
+  $("headline").textContent = !total ? "Let's plan something great" : !left ? "All done — you're on fire 🔥" :
+    pct>=50 ? "Over halfway there 💪" : `${left} thing${left>1?"s":""} to conquer`;
+  $("date").textContent = new Date().toLocaleDateString(undefined,{weekday:"long",day:"numeric",month:"long"});
+  $("stats").innerHTML = `<span class="stat">${left} left</span><span class="stat">${done} done</span>` +
+    (dueToday?`<span class="stat">📅 ${dueToday} today</span>`:"") + (over?`<span class="stat">⏰ ${over} overdue</span>`:"");
+  $("ringVal").style.strokeDashoffset = 238.76*(1-pct/100);
+  $("pct").textContent = pct+"%";
+
+  // category cards
+  const stat = n => { const ts = state.tasks.filter(t=>n==="__all"||(n==="__daily"?t.repeat==="daily":t.cat===n)); const d = ts.filter(t=>t.done).length; return [ts.length-d, ts.length?d/ts.length*100:0]; };
+  const [aL, aP] = stat("__all"), [dL, dP] = stat("__daily");
+  let html = `<button class="cat ${current==="__all"?"on":""}" data-i="-1" style="--c1:#312e81;--c2:#6d28d9">
+    <div class="emo">🗂️</div><div><div class="nm">All tasks</div><div class="ct">${aL} to do</div><div class="bar"><i style="width:${aP}%"></i></div></div></button>
+    <button class="cat ${current==="__daily"?"on":""}" data-i="-2" style="--c1:#0ea5e9;--c2:#8b5cf6">
+    <div class="emo">🔁</div><div><div class="nm">Daily routine</div><div class="ct">${dL} left today</div><div class="bar"><i style="width:${dP}%"></i></div></div></button>`;
+  state.categories.forEach((c,i)=>{
+    const [l,p] = stat(c.name);
+    html += `<button class="cat ${current===c.name?"on":""}" data-i="${i}" style="${vars(c)}">
+      <div class="emo">${esc(c.emoji)}</div><div><div class="nm">${esc(c.name)}</div><div class="ct">${l} to do</div><div class="bar"><i style="width:${p}%"></i></div></div></button>`;
+  });
+  html += `<button class="cat add" id="addCat"><div class="emo">＋</div>New category</button>`;
+  $("cats").innerHTML = html;
+
+  const cc = isVirtual() ? null : catOf(current);
+  $("listTitle").textContent = cc ? `${cc.emoji} ${cc.name}` : current==="__daily" ? "🔁 Daily routine" : "🗂️ All tasks";
+  $("catTools").innerHTML = cc ? `<button class="ghost" id="renCat">✏️ Rename</button><button class="ghost" id="delCat">🗑️</button>` : "";
+
+  // list
+  const pOrd = {high:0, med:1, low:2, "":3};
+  const items = state.tasks.filter(t => inView(t) &&(filter==="all" || (filter==="done"?t.done:!t.done)))
+    .sort((a,b)=> (a.done-b.done) || (pOrd[a.pri||""]-pOrd[b.pri||""]) || ((a.due||"9999").localeCompare(b.due||"9999")) || b.created-a.created);
+
+  if(!items.length){
+    $("list").innerHTML = filter==="done"
+      ? `<div class="empty"><div class="big">🌱</div><b>Nothing completed yet</b>Tick off a task and it'll show up here.</div>`
+      : `<div class="empty"><div class="big">🎉</div><b>All clear!</b>Tap <b style="display:inline">+</b> to add a new task.</div>`;
+    return;
+  }
+  $("list").innerHTML = items.map((t,k)=>{
+    const c = catOf(t.cat), m = [];
+    if(isVirtual()) m.push(`<span class="tag ct">${esc(c.emoji)} ${esc(c.name)}</span>`);
+    if(t.repeat==="daily"){
+      m.push(`<span class="tag daily">🔁 Daily</span>`);
+      const s = streakOf(t); if(s>1) m.push(`<span class="tag streak">🔥 ${s}-day streak</span>`);
+    }
+    if(t.pri) m.push(`<span class="tag ${t.pri}">${PRI[t.pri][0]}</span>`);
+    if(t.due && !t.repeat) m.push(`<span class="tag ${!t.done&&t.due<t0?"over":t.due===t0?"today":""}">${!t.done&&t.due<t0?"⏰ ":"📅 "}${fmtDue(t.due)}</span>`);
+    return `<li class="${t.done?"done":""}" data-id="${t.id}" style="${vars(c)};animation-delay:${Math.min(k,8)*35}ms">
+      <button class="chk" aria-label="Mark done"></button>
+      <div class="body"><div class="title">${esc(t.text)}</div>${m.length?`<div class="meta">${m.join("")}</div>`:""}</div>
+      <button class="rep ${t.repeat?"on":""}" aria-label="Repeat daily" title="Repeat daily">🔁</button>
+      <button class="del" aria-label="Delete">×</button></li>`;
+  }).join("");
+}
+
+// sheet
+function renderChips(){
+  $("catChips").innerHTML = state.categories.map((c,i)=>
+    `<button type="button" class="chip ${c.name===selCat?"on":""}" data-i="${i}" style="${vars(c)}">${esc(c.emoji)} ${esc(c.name)}</button>`).join("");
+  $("priChips").innerHTML = Object.entries(PRI).map(([k,v])=>
+    `<button type="button" class="chip ${k===selPri?"on":""}" data-p="${k}" style="--c1:${v[1]};--c2:${v[2]}">${v[0]}</button>`).join("");
+  $("repChips").innerHTML = [["","📌 Just once","#64748b","#94a3b8"],["daily","🔁 Every day","#0ea5e9","#8b5cf6"]].map(([k,l,a,b])=>
+    `<button type="button" class="chip ${k===selRep?"on":""}" data-r="${k}" style="--c1:${a};--c2:${b}">${l}</button>`).join("");
+  $("dueWrap").style.display = selRep ? "none" : "";
+}
+function openSheet(){
+  if(!state.categories.length){ toast("Create a category first"); return; }
+  selCat = !isVirtual() ? current : (selCat && state.categories.some(c=>c.name===selCat) ? selCat : state.categories[0].name);
+  selPri = ""; selRep = current==="__daily" ? "daily" : ""; $("newTask").value = ""; $("newDue").value = "";
+  renderChips(); $("sheetWrap").classList.add("open");
+  setTimeout(()=>$("newTask").focus(), 300);
+}
+const closeSheet = ()=> $("sheetWrap").classList.remove("open");
+$("fab").onclick = openSheet;
+$("sheetBg").onclick = closeSheet;
+$("catChips").onclick = e=>{ const b=e.target.closest(".chip"); if(b){ selCat = state.categories[b.dataset.i].name; renderChips(); } };
+$("priChips").onclick = e=>{ const b=e.target.closest(".chip"); if(b){ selPri = b.dataset.p; renderChips(); } };
+$("repChips").onclick = e=>{ const b=e.target.closest(".chip"); if(b){ selRep = b.dataset.r; renderChips(); } };
+$("sheet").onsubmit = e=>{
+  e.preventDefault();
+  const text = $("newTask").value.trim();
+  if(!text){ $("newTask").focus(); return; }
+  state.tasks.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6), text, cat:selCat, pri:selPri,
+    due: selRep ? "" : $("newDue").value, repeat:selRep, done:false, created:Date.now()});
+  if(filter==="done"){ filter="active"; [...$("seg").children].forEach(x=>x.classList.toggle("on", x.dataset.f==="active")); }
+  save(); render(); closeSheet();
+  const c = catOf(selCat); toast(`Added to ${c.emoji} ${c.name}`);
+};
+
+// categories
+$("cats").onclick = e=>{
+  const b = e.target.closest(".cat"); if(!b) return;
+  if(b.id==="addCat"){
+    const raw = (prompt("New category name\n(tip: start with an emoji, e.g. 🎨 Design)")||"").trim();
+    if(!raw) return;
+    const p = parseName(raw); if(!p.name) return;
+    if(state.categories.some(c=>c.name===p.name)) return toast("That category already exists");
+    state.categories.push({name:p.name, emoji:p.emoji, pal:state.categories.length%PAL.length});
+    current = p.name; save(); render(); toast(`${p.emoji} ${p.name} created`); return;
+  }
+  const i = +b.dataset.i; current = i===-1 ? "__all" : i===-2 ? "__daily" : state.categories[i].name; render();
+};
+$("catTools").onclick = e=>{
+  const c = catOf(current);
+  if(e.target.id==="renCat"){
+    const raw = (prompt("Rename category:", `${c.emoji} ${c.name}`)||"").trim(); if(!raw) return;
+    const p = parseName(raw); if(!p.name) return;
+    if(p.name!==c.name && state.categories.some(x=>x.name===p.name)) return toast("That name is already used");
+    state.tasks.forEach(t=>{ if(t.cat===c.name) t.cat = p.name; });
+    const obj = state.categories.find(x=>x.name===c.name); obj.name = p.name; obj.emoji = p.emoji;
+    current = p.name; save(); render();
+  }
+  if(e.target.id==="delCat"){
+    const n = state.tasks.filter(t=>t.cat===c.name).length;
+    if(!confirm(`Delete "${c.name}"${n?` and its ${n} task(s)`:""}?`)) return;
+    state.tasks = state.tasks.filter(t=>t.cat!==c.name);
+    state.categories = state.categories.filter(x=>x.name!==c.name);
+    current = "__all"; save(); render(); toast("Category deleted");
+  }
+};
+
+// filter + list
+$("seg").onclick = e=>{
+  const b = e.target.closest("button"); if(!b) return;
+  filter = b.dataset.f; [...$("seg").children].forEach(x=>x.classList.toggle("on", x===b)); render();
+};
+$("list").onclick = e=>{
+  const li = e.target.closest("li"); if(!li) return;
+  const t = state.tasks.find(x=>x.id===li.dataset.id); if(!t) return;
+  if(e.target.closest(".chk")){
+    t.done = !t.done;
+    if(t.repeat==="daily") markDaily(t, t.done);
+    save();
+    if(t.done){
+      const r = e.target.getBoundingClientRect(), c = catOf(t.cat);
+      confetti(r.left+r.width/2, r.top+r.height/2, [...PAL[c.pal%PAL.length], "#facc15", "#ffffff"]);
+      if(navigator.vibrate) navigator.vibrate(12);
+      li.classList.add("done");
+      setTimeout(render, filter==="active" ? 450 : 0);
+      const left = state.tasks.filter(x=>!x.done).length;
+      toast(!left ? "Everything done! 🏆" : t.repeat==="daily" && t.streak>1 ? `🔥 ${t.streak}-day streak!` : t.repeat==="daily" ? "Done for today ✅" : "Nice! ✅");
+    } else render();
+  } else if(e.target.closest(".rep")){
+    if(t.repeat==="daily"){ t.repeat = ""; toast("Repeat turned off"); }
+    else { t.repeat = "daily"; t.due = ""; if(t.done){ t.lastDone = today(); t.streak = t.streak||1; } toast("🔁 Now repeats every day"); }
+    save(); render();
+  } else if(e.target.closest(".del")){
+    if(confirm("Delete this task?")){ state.tasks = state.tasks.filter(x=>x!==t); save(); render(); }
+  } else if(e.target.closest(".title")){
+    const txt = (prompt("Edit task:", t.text)||"").trim();
+    if(txt){ t.text = txt; save(); render(); }
+  }
+};
+
+// menu
+$("moreBtn").onclick = e=>{ e.stopPropagation(); $("menu").classList.toggle("open"); };
+document.addEventListener("click", e=>{ if(!e.target.closest("#menu")) $("menu").classList.remove("open"); });
+$("menu").addEventListener("click", e=>{ if(e.target.closest("button")) $("menu").classList.remove("open"); });
+
+// tools
+$("clearDone").onclick = ()=>{
+  const inScope = t => inView(t) && t.repeat!=="daily";
+  const n = state.tasks.filter(t=>t.done && inScope(t)).length;
+  if(!n) return toast("No completed tasks here");
+  if(confirm(`Remove ${n} completed task(s)?`)){ state.tasks = state.tasks.filter(t=>!(t.done && inScope(t))); save(); render(); toast("Cleaned up 🧹"); }
+};
+$("exportBtn").onclick = ()=>{
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(state,null,2)],{type:"application/json"}));
+  a.download = `todo-backup-${today()}.json`; document.body.appendChild(a); a.click(); a.remove();
+  toast("Backup saved ⬇️");
+};
+$("importBtn").onclick = ()=> $("importFile").click();
+$("importFile").onchange = e=>{
+  const f = e.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = ()=>{
+    try{
+      const s = JSON.parse(r.result);
+      if(!Array.isArray(s.categories) || !Array.isArray(s.tasks)) throw 0;
+      if(confirm("Replace your current tasks with this backup?")){ state = normalize(s); current = "__all"; refreshDaily(); save(); render(); toast("Backup restored ⬆️"); }
+    }catch(err){ toast("That file isn't a valid backup"); }
+    e.target.value = "";
+  };
+  r.readAsText(f);
+};
+
+refreshDaily();
+lastDay = today();
+render();
+// reset daily tasks automatically when the date changes (app left open, or reopened from background)
+setInterval(checkNewDay, 30000);
+document.addEventListener("visibilitychange", ()=>{ if(!document.hidden) checkNewDay(); });
+window.addEventListener("focus", checkNewDay);
+</script>
+</body>
+</html>
